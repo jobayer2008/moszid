@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>মসজিদ ব্যবস্থাপনা</title>
+<style>
+:root{--pri:#0e6b4f;--pri-d:#094d38;--acc:#c99a2e;--bg:#f0f5f2;--card:#ffffff;--txt:#1f2d27;--muted:#5f6f68;--danger:#b3412e;--border:#e0e6e2;--shadow:0 2px 10px rgba(9,77,56,.07);}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans Bengali","SolaimanLipi",sans-serif;background:var(--bg);color:var(--txt)}
+header{background:linear-gradient(120deg,var(--pri),var(--pri-d) 70%);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:3px solid var(--acc)}
+header h1{margin:0;font-size:1.25rem}
+header .sub{font-size:.8rem;opacity:.85}
+nav{display:flex;gap:6px;background:var(--pri-d);padding:8px 10px;overflow-x:auto}
+nav button{background:transparent;border:none;color:#fff;opacity:.8;padding:9px 16px;border-radius:20px;cursor:pointer;font-size:.9rem;white-space:nowrap;transition:.15s}
+nav button.active{background:var(--acc);color:#3a2c05;opacity:1;font-weight:700}
+main{padding:16px;max-width:1100px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.stat{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--acc);border-radius:12px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:1.35rem;color:var(--pri-d)}
+.stat span{color:var(--muted);font-size:.85rem}
+h2{color:var(--pri-d);font-size:1.1rem;margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid #eef4f1}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:right}
+th:first-child,td:first-child{text-align:right}
+thead th{background:#eef4f1;color:var(--pri-d)}
+tr:last-child td{border-bottom:none}
+.btn{background:var(--pri);color:#fff;border:none;padding:9px 16px;border-radius:9px;cursor:pointer;font-size:.9rem;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.btn.acc{background:var(--acc)}
+.btn.danger{background:var(--danger)}
+.btn.ghost{background:transparent;color:var(--pri-d);border:1px solid var(--pri)}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:.9rem;background:#fff}
+label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:4px}
+.field{margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.row .field{flex:1;min-width:140px;margin-bottom:0}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.75rem;background:#eef4f1;color:var(--pri-d)}
+.tag.due{background:#fbeae7;color:var(--danger)}
+.tag.paid{background:#e7f4ec;color:var(--pri-d)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:20px;max-width:480px;width:100%;max-height:90vh;overflow:auto}
+.modal h3{margin-top:0;color:var(--pri-d)}
+.close{float:left;cursor:pointer;font-size:1.3rem;color:var(--muted);background:none;border:none}
+.actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.tabs2{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs2 button{background:#eef4f1;border:1px solid var(--border);padding:7px 14px;border-radius:20px;cursor:pointer;font-size:.85rem}
+.tabs2 button.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+.notice{background:#fff8e8;border:1px solid #f0dca0;border-radius:10px;padding:12px;color:#6b5410}
+.mini{font-size:.8rem;color:var(--muted)}
+.section-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.empty{text-align:center;color:var(--muted);padding:20px}
+::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#c8d3ce;border-radius:4px}
+.auth-wrap{max-width:420px;margin:40px auto}
+@media print{header,nav,.no-print{display:none!important}main{padding:0}.card{border:none;box-shadow:none}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🕌 <span id="hMosqueName">মসজিদ ব্যবস্থাপনা</span></h1><div class="sub" id="hAddr"></div></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="sub" id="hDate"></div>
+    <button id="logoutBtn" class="no-print" style="display:none;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:.85rem" onclick="doLogout()">লগআউট</button>
+  </div>
+</header>
+<nav id="nav" style="display:none"></nav>
+<main id="app"></main>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ---------- Bengali helpers ---------- */
+const bnDigits=['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+const MONTHS=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+function toBn(n){return String(n).replace(/[0-9]/g,d=>bnDigits[d]);}
+function taka(n){n=Math.round(Number(n)||0);let s=n.toString();let neg=s[0]==='-';if(neg)s=s.slice(1);
+  let last3=s.length>3?s.slice(-3):s;let rest=s.length>3?s.slice(0,-3):'';
+  if(rest)rest=rest.replace(/\B(?=(\d{2})+(?!\d))/g,',');
+  let out=(rest?rest+',':'')+last3;return (neg?'-':'')+'৳'+toBn(out);}
+function todayBn(){const d=new Date();return toBn(d.getDate())+' '+MONTHS[d.getMonth()]+' '+toBn(d.getFullYear());}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+/* ---------- Data / storage ---------- */
+const KEY='mosque_app_data_v1';
+const DEFAULTS={
+  info:{mosqueName:"বাইতুল আমান জামে মসজিদ",address:"রোড ৪, ব্লক সি, মিরপুর, ঢাকা-১২১৬",imamName:"হাফেজ মাওলানা আব্দুল্লাহ আল মামুন",khatibName:"মুফতি ড. সাইফুল ইসলাম",presidentName:"আলহাজ্ব মো. রফিকুল ইসলাম",secretaryName:"প্রকৌশলী তানভীর আহমেদ",treasurerName:"মো. জাহিদ হাসান",phone:"০১৭১১-২৩৪৫৬৭",estYear:"১৯৯৮ খ্রিস্টাব্দ",noticeText:"প্রতি শুক্রবার বাদ মাগরিব পবিত্র কুরআন তাফসীর ও দোয়া মাহফিল অনুষ্ঠিত হয়। সকল মুসল্লিদের অংশগ্রহণের জন্য বিশেষভাবে অনুরোধ করা হলো।"},
+  members:[
+    {id:'m1',code:'M-101',name:'আলহাজ্ব মো. রফিকুল ইসলাম',phone:'০১৭১১-২৩৪৫৬৭',address:'বাড়ি ১২, রোড ৪, ব্লক সি',role:'সভাপতি',commitment:2000,joinDate:'০১ জানুয়ারি ২০২২',active:true},
+    {id:'m2',code:'M-102',name:'প্রকৌশলী তানভীর আহমেদ',phone:'০১৮১৯-৮৭৬৫৪৩',address:'বাড়ি ১৮, রোড ৫, ব্লক সি',role:'সাধারণ সম্পাদক',commitment:1500,joinDate:'১৫ জানুয়ারি ২০২২',active:true},
+    {id:'m3',code:'M-103',name:'মো. জাহিদ হাসান',phone:'০১৯১২-৩৪৫৬৭৮',address:'বাড়ি ৭, রোড ২, ব্লক সি',role:'কোষাধ্যক্ষ',commitment:1000,joinDate:'০১ ফেব্রুয়ারি ২০২২',active:true},
+    {id:'m4',code:'M-104',name:'ডা. মাহমুদুর রহমান',phone:'০১৭১৫-৯৯৮৮৭৭',address:'বাড়ি ২৪, রোড ৩, ব্লক সি',role:'আজীবন সদস্য',commitment:1500,joinDate:'১০ মার্চ ২০২৩',active:true},
+    {id:'m5',code:'M-105',name:'আলহাজ্ব আব্দুল করিম',phone:'০১৬৭৬-৫৪৩২১০',address:'বাড়ি ৩১, রোড ৬, ব্লক বি',role:'কার্যকরী সদস্য',commitment:1000,joinDate:'০৫ মে ২০২৩',active:true},
+    {id:'m6',code:'M-106',name:'মো. কামরুল হাসান',phone:'০১৫৫২-১১২২৩৩',address:'বাড়ি ৯, রোড ১, ব্লক সি',role:'সাধারণ মুসল্লি',commitment:500,joinDate:'১২ জুন ২০২৩',active:true},
+    {id:'m7',code:'M-107',name:'মো. শফিকুল আলম',phone:'০১৭২২-৪৪৫৫৬৬',address:'বাড়ি ১৫, রোড ৪, ব্লক সি',role:'সাধারণ মুসল্লি',commitment:500,joinDate:'২০ আগস্ট ২০২৩',active:true},
+    {id:'m8',code:'M-108',name:'ব্যারিস্টার নাজমুল হুদা',phone:'০১৮৩৩-৭৭৮৮৯৯',address:'বাড়ি ৪২, রোড ৭, ব্লক ডি',role:'আজীবন সদস্য',commitment:2000,joinDate:'০১ জানুয়ারি ২০২৪',active:true}
+  ],
+  subs:[],
+  prayers:[
+    {key:'FAJR',name:'ফজর',azan:'ভোর ৪:৪৫',jamaat:'ভোর ৫:১৫',rakat:'সুন্নত ২, ফরজ ২ (মোট ৪ রাকাত)',jummah:false},
+    {key:'DHUHR',name:'যোহর',azan:'দুপুর ১২:৪৫',jamaat:'দুপুর ১:১৫',rakat:'সুন্নত ৪, ফরজ ৪, সুন্নত ২ (মোট ১০ রাকাত)',jummah:false},
+    {key:'ASR',name:'আসর',azan:'বিকাল ৪:১৫',jamaat:'বিকাল ৪:৩০',rakat:'সুন্নত ৪, ফরজ ৪ (মোট ৮ রাকাত)',jummah:false},
+    {key:'MAGHRIB',name:'মাগরিব',azan:'সন্ধ্যা ৬:০৪',jamaat:'সন্ধ্যা ৬:১০',rakat:'ফরজ ৩, সুন্নত ২ (মোট ৫ রাকাত)',jummah:false},
+    {key:'ISHA',name:'এশা',azan:'রাত ৭:৪৫',jamaat:'রাত ৮:১৫',rakat:'ফরজ ৪, সুন্নত ২, বিতর ৩ (মোট ৯ রাকাত)',jummah:false},
+    {key:'JUMMAH',name:'পবিত্র জুম্মা',azan:'দুপুর ১২:৩০',jamaat:'দুপুর ১:৩০',rakat:'খুতবা দুপুর ১:০৫, ফরজ ২ রাকাত ও সুন্নত',jummah:true}
+  ],
+  donations:[],expenses:[]
+};
+const DON_CATS=["জুমার দানবাক্স","মসজিদ উন্নয়ন তহবিল","এতিমখানা ও মাদ্রাসা","মাহফিল ও ধর্মীয় অনুষ্ঠান","যাকাত ও সদকা","সাধারণ অনুদান"];
+const EXP_CATS=["ইমাম ও মুয়াজ্জিন হাদিয়া","বিদ্যুৎ ও পানি বিল","মসজিদ সংস্কার ও উন্নয়ন","সাউন্ড সিস্টেম ও আসবাবপত্র","পরিষ্কার-পরিচ্ছন্নতা ও বিবিধ"];
+const PAY_METHODS=["নগদ","বিকাশ","নগদ (এমএফএস)","ব্যাংক"];
+const ROLES=["সভাপতি","সাধারণ সম্পাদক","কোষাধ্যক্ষ","কার্যকরী সদস্য","আজীবন সদস্য","সাধারণ মুসল্লি"];
+
+let DB=null;
+const now=new Date();let CUR_YEAR=now.getFullYear();
+
+/* ---------- Supabase auth + storage (replaces localStorage) ---------- */
+let sb=null, sbSession=null, saveTimer=null;
+const SB_CFG_KEY='mosque_sb_cfg';
+function getSbCfg(){try{return JSON.parse(localStorage.getItem(SB_CFG_KEY));}catch(e){return null;}}
+function setSbCfg(url,key){try{localStorage.setItem(SB_CFG_KEY,JSON.stringify({url,key}));}catch(e){}}
+function uidOwner(){return sbSession.user.id;}
+const INFO_COLS={mosqueName:'mosque_name',address:'address',imamName:'imam_name',khatibName:'khatib_name',presidentName:'president_name',secretaryName:'secretary_name',treasurerName:'treasurer_name',phone:'phone',estYear:'est_year',noticeText:'notice_text'};
+function infoRowToObj(r){const o={};for(const k in INFO_COLS)o[k]=r[INFO_COLS[k]]||'';return o;}
+function memberRowToObj(r){return{id:r.id,code:r.code,name:r.name,phone:r.phone,address:r.address,role:r.role,commitment:Number(r.commitment)||0,joinDate:r.join_date,active:r.active};}
+function subRowToObj(r){return{id:r.id,memberId:r.member_id,memberName:r.member_name,month:r.month,year:r.year,amount:Number(r.amount)||0,date:r.pay_date,method:r.method,receipt:r.receipt,notes:r.notes||''};}
+function donRowToObj(r){return{id:r.id,donorName:r.donor_name,donorPhone:r.donor_phone,category:r.category,amount:Number(r.amount)||0,paymentMethod:r.payment_method,dateString:r.date_string,year:r.year,monthIndex:r.month_index,receiptNo:r.receipt_no,notes:r.notes||'',timestamp:Date.parse(r.created_at)||Date.now()};}
+function expRowToObj(r){return{id:r.id,title:r.title,category:r.category,amount:Number(r.amount)||0,voucherNo:r.voucher_no,approvedBy:r.approved_by,dateString:r.date_string,year:r.year,monthIndex:r.month_index,notes:r.notes||'',timestamp:Date.parse(r.created_at)||Date.now()};}
+function prayerRowToObj(r){return{key:r.key,name:r.name,azan:r.azan,jamaat:r.jamaat,rakat:r.rakat,jummah:r.jummah};}
+async function boot(){
+  const cfg=getSbCfg();
+  if(!cfg){renderAuthScreen('register');return;}
+  try{sb=window.supabase.createClient(cfg.url,cfg.key);}
+  catch(e){renderAuthScreen('login','সংরক্ষিত Supabase তথ্য সঠিক নয়, আবার দিন।');return;}
+  try{
+    const{data,error}=await sb.auth.getSession();
+    if(error||!data.session){renderAuthScreen('login');return;}
+    sbSession=data.session;await afterLogin();
+  }catch(e){renderAuthScreen('login');}
+}
+async function afterLogin(){
+  document.getElementById('logoutBtn').style.display='';
+  document.getElementById('nav').style.display='';
+  const uid_=uidOwner();
+  try{
+    let[infoR,memR,pryR,subR,donR,expR]=await Promise.all([
+      sb.from('mosque_info').select('*').eq('user_id',uid_).maybeSingle(),
+      sb.from('members').select('*').eq('user_id',uid_).order('created_at'),
+      sb.from('prayers').select('*').eq('user_id',uid_),
+      sb.from('subscriptions').select('*').eq('user_id',uid_),
+      sb.from('donations').select('*').eq('user_id',uid_).order('created_at',{ascending:false}),
+      sb.from('expenses').select('*').eq('user_id',uid_).order('created_at',{ascending:false})
+    ]);
+    for(const r of[infoR,memR,pryR,subR,donR,expR])if(r.error)throw r.error;
+    // প্রথমবার লগইনে মসজিদের তথ্য ও নামাজের সময় ডিফল্ট মান দিয়ে তৈরি করা হয়
+    if(!infoR.data){
+      const row={user_id:uid_};for(const k in INFO_COLS)row[INFO_COLS[k]]=DEFAULTS.info[k];
+      const ins=await sb.from('mosque_info').insert(row).select().single();
+      if(ins.error)throw ins.error;
+      infoR={data:ins.data};
+    }
+    if(!pryR.data||pryR.data.length===0){
+      const rows=DEFAULTS.prayers.map(p=>({user_id:uid_,key:p.key,name:p.name,azan:p.azan,jamaat:p.jamaat,rakat:p.rakat,jummah:p.jummah}));
+      const ins=await sb.from('prayers').insert(rows).select();
+      if(ins.error)throw ins.error;
+      pryR={data:ins.data};
+    }
+    DB={
+      info:infoRowToObj(infoR.data),
+      members:(memR.data||[]).map(memberRowToObj),
+      subs:(subR.data||[]).map(subRowToObj),
+      prayers:(pryR.data||[]).map(prayerRowToObj).sort((a,b)=>DEFAULTS.prayers.findIndex(p=>p.key===a.key)-DEFAULTS.prayers.findIndex(p=>p.key===b.key)),
+      donations:(donR.data||[]).map(donRowToObj),
+      expenses:(expR.data||[]).map(expRowToObj)
+    };
+  }catch(e){
+    alert('ডেটা লোড করতে সমস্যা হয়েছে। supabase-schema-full.sql চালানো হয়েছে কিনা এবং RLS পলিসি ঠিকমতো তৈরি হয়েছে কিনা যাচাই করুন।\n\n'+(e.message||e));
+    DB=JSON.parse(JSON.stringify(DEFAULTS));DB.members=[];DB.subs=[];DB.donations=[];DB.expenses=[];
+  }
+  renderHeader();renderNav();renderApp();
+}
+function doLogout(){
+  if(sb)sb.auth.signOut().catch(()=>{});
+  sbSession=null;DB=null;
+  document.getElementById('logoutBtn').style.display='none';
+  renderAuthScreen('login');
+}
+function renderAuthScreen(mode,msg){
+  const cfg=getSbCfg()||{url:'',key:''};
+  document.getElementById('nav').style.display='none';
+  document.getElementById('nav').innerHTML='';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('app').innerHTML=`
+  <div class="card auth-wrap">
+    <div class="tabs2">
+      <button class="${mode==='register'?'active':''}" onclick="renderAuthScreen('register')">রেজিস্ট্রেশন</button>
+      <button class="${mode==='login'?'active':''}" onclick="renderAuthScreen('login')">লগইন</button>
+    </div>
+    ${msg?`<div class="notice" style="margin-bottom:10px">${msg}</div>`:''}
+    <div class="field"><label>Supabase Project URL</label><input id="a_url" value="${cfg.url||''}" placeholder="https://xxxx.supabase.co"></div>
+    <div class="field"><label>Supabase Publishable (anon) Key</label><input id="a_key" value="${cfg.key||''}"></div>
+    ${mode==='register'?'<div class="field"><label>নাম</label><input id="a_name"></div>':''}
+    <div class="field"><label>ইমেইল</label><input id="a_email" type="email"></div>
+    <div class="field"><label>পাসওয়ার্ড</label><input id="a_pass" type="password"></div>
+    <button class="btn" style="width:100%" onclick="${mode==='register'?'submitRegister()':'submitLogin()'}">${mode==='register'?'রেজিস্ট্রেশন করুন':'লগইন করুন'}</button>
+    <p class="mini" style="margin-top:10px">Supabase প্রজেক্টের URL ও anon/publishable key আপনার Supabase ড্যাশবোর্ড → Project Settings → API থেকে পাওয়া যাবে।</p>
+  </div>`;
+}
+async function submitRegister(){
+  const name=val('a_name'),email=val('a_email'),pass=val('a_pass'),url=val('a_url').trim(),key=val('a_key').trim();
+  if(!name||!email||!pass||!url||!key){alert('সব ঘর পূরণ করুন');return;}
+  setSbCfg(url,key);
+  try{sb=window.supabase.createClient(url,key);}
+  catch(e){renderAuthScreen('register','Supabase URL/Key সঠিক নয়।');return;}
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
+    if(error)throw error;
+    if(data.session){sbSession=data.session;await afterLogin();}
+    else{renderAuthScreen('login','রেজিস্ট্রেশন সফল হয়েছে। ইমেইলে পাঠানো লিংকে ক্লিক করে ভেরিফাই করুন, তারপর এখানে লগইন করুন।');}
+  }catch(e){renderAuthScreen('register',e.message||'রেজিস্ট্রেশন ব্যর্থ হয়েছে।');}
+}
+async function submitLogin(){
+  const email=val('a_email'),pass=val('a_pass'),url=val('a_url').trim(),key=val('a_key').trim();
+  if(!email||!pass||!url||!key){alert('সব ঘর পূরণ করুন');return;}
+  setSbCfg(url,key);
+  try{sb=window.supabase.createClient(url,key);}
+  catch(e){renderAuthScreen('login','Supabase URL/Key সঠিক নয়।');return;}
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error)throw error;
+    sbSession=data.session;await afterLogin();
+  }catch(e){renderAuthScreen('login',e.message||'লগইন ব্যর্থ হয়েছে।');}
+}
+
+/* ---------- Router ---------- */
+const TABS=[['dashboard','ড্যাশবোর্ড'],['members','সদস্য ও চাঁদা'],['prayer','নামাজের সময়সূচী'],['finance','দান ও ব্যয়'],['audit','অডিট রিপোর্ট']];
+let currentTab='dashboard';
+function renderNav(){
+  document.getElementById('nav').innerHTML=TABS.map(t=>`<button class="${t[0]===currentTab?'active':''}" onclick="goTab('${t[0]}')">${t[1]}</button>`).join('');
+}
+function goTab(t){currentTab=t;renderNav();renderApp();}
+function renderHeader(){
+  document.getElementById('hMosqueName').textContent=DB.info.mosqueName;
+  document.getElementById('hAddr').textContent=DB.info.address;
+  document.getElementById('hDate').textContent='আজ: '+todayBn();
+}
+function modal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalBg').classList.add('open');}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal();});
+
+/* ---------- DASHBOARD ---------- */
+function viewDashboard(){
+  const y=CUR_YEAR,m=now.getMonth()+1;
+  const activeMembers=DB.members.filter(x=>x.active);
+  const paidIds=new Set(DB.subs.filter(s=>s.year===y&&s.month===m).map(s=>s.memberId));
+  const dueMembers=activeMembers.filter(x=>!paidIds.has(x.id));
+  const yearSubs=DB.subs.filter(s=>s.year===y).reduce((a,b)=>a+b.amount,0);
+  const yearDon=DB.donations.filter(d=>d.year===y).reduce((a,b)=>a+b.amount,0);
+  const yearExp=DB.expenses.filter(e=>e.year===y).reduce((a,b)=>a+b.amount,0);
+  const balance=yearSubs+yearDon-yearExp;
+  return `
+  <div class="grid g4">
+    <div class="stat"><b>${toBn(activeMembers.length)}</b><span>সক্রিয় সদস্য</span></div>
+    <div class="stat"><b style="color:var(--danger)">${toBn(dueMembers.length)}</b><span>এই মাসে চাঁদা বকেয়া</span></div>
+    <div class="stat"><b>${taka(yearSubs+yearDon)}</b><span>${toBn(y)} সালের মোট আয়</span></div>
+    <div class="stat"><b style="color:${balance>=0?'var(--pri-d)':'var(--danger)'}">${taka(balance)}</b><span>বর্তমান স্থিতি</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h2>নামাজের সময় (আজ)</h2>
+      <table><tbody>${DB.prayers.map(p=>`<tr><td style="text-align:right">${p.name}</td><td>আজান: ${p.azan}</td><td>জামাত: ${p.jamaat}</td></tr>`).join('')}</tbody></table>
+    </div>
+    <div class="card">
+      <h2>বিজ্ঞপ্তি</h2>
+      <div class="notice">${DB.info.noticeText}</div>
+      <p class="mini" style="margin-top:10px">ইমাম: ${DB.info.imamName}<br>খতিব: ${DB.info.khatibName}</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-head"><h2 style="margin:0">এই মাসে চাঁদা বকেয়া সদস্য</h2></div>
+    ${dueMembers.length? `<table><thead><tr><th>নাম</th><th>পদবি</th><th>মাসিক চাঁদা</th></tr></thead><tbody>
+      ${dueMembers.map(x=>`<tr><td>${x.name}</td><td>${x.role}</td><td>${taka(x.commitment)}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty">সকল সদস্যের চাঁদা পরিশোধিত ✅</div>'}
+  </div>`;
+}
+
+/* ---------- MEMBERS & SUBSCRIPTIONS ---------- */
+let memberSubTab='members';
+function viewMembers(){
+  return `
+  <div class="tabs2">
+    <button class="${memberSubTab==='members'?'active':''}" onclick="setMemberSubTab('members')">সদস্য তালিকা</button>
+    <button class="${memberSubTab==='subs'?'active':''}" onclick="setMemberSubTab('subs')">চাঁদা আদায়</button>
+  </div>
+  ${memberSubTab==='members'?memberListView():subsView()}`;
+}
+function setMemberSubTab(t){memberSubTab=t;renderApp();}
+function memberListView(){
+  return `
+  <div class="card">
+    <div class="section-head"><h2 style="margin:0">সদস্য তালিকা (${toBn(DB.members.length)})</h2><button class="btn" onclick="openMemberForm()">+ নতুন সদস্য</button></div>
+    <table><thead><tr><th>কোড</th><th>নাম</th><th>পদবি</th><th>ফোন</th><th>মাসিক চাঁদা</th><th>অবস্থা</th><th>কার্যক্রম</th></tr></thead>
+    <tbody>${DB.members.map(mm=>`<tr>
+      <td>${mm.code}</td><td>${mm.name}</td><td>${mm.role}</td><td>${mm.phone}</td><td>${taka(mm.commitment)}</td>
+      <td><span class="tag ${mm.active?'paid':'due'}">${mm.active?'সক্রিয়':'নিষ্ক্রিয়'}</span></td>
+      <td><button class="btn ghost" style="padding:4px 8px" onclick="openMemberForm('${mm.id}')">সম্পাদনা</button>
+      <button class="btn acc" style="padding:4px 8px" onclick="printMemberStatement('${mm.id}')">🖨️</button>
+      <button class="btn danger" style="padding:4px 8px" onclick="deleteMember('${mm.id}')">মুছুন</button></td>
+    </tr>`).join('')||`<tr><td colspan="7" class="empty">কোনো সদস্য নেই</td></tr>`}</tbody></table>
+  </div>`;
+}
+function openMemberForm(id){
+  const mm=id?DB.members.find(x=>x.id===id):null;
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>${mm?'সদস্য সম্পাদনা':'নতুন সদস্য যোগ'}</h3>
+  <div class="field"><label>সদস্য কোড</label><input id="f_code" value="${mm?mm.code:'M-'+toBn(100+DB.members.length+1)}"></div>
+  <div class="field"><label>নাম</label><input id="f_name" value="${mm?mm.name:''}"></div>
+  <div class="field"><label>ফোন</label><input id="f_phone" value="${mm?mm.phone:''}"></div>
+  <div class="field"><label>ঠিকানা</label><input id="f_addr" value="${mm?mm.address:''}"></div>
+  <div class="field"><label>পদবি</label><select id="f_role">${ROLES.map(r=>`<option ${mm&&mm.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+  <div class="field"><label>মাসিক চাঁদা (৳)</label><input id="f_commit" type="number" value="${mm?mm.commitment:500}"></div>
+  <div class="field"><label>যোগদানের তারিখ</label><input id="f_join" value="${mm?mm.joinDate:todayBn()}"></div>
+  <div class="field"><label><input type="checkbox" id="f_active" style="width:auto" ${!mm||mm.active?'checked':''}> সক্রিয় সদস্য</label></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="saveMember('${id||''}')">সংরক্ষণ</button></div>`);
+}
+async function saveMember(id){
+  const data={code:val('f_code'),name:val('f_name'),phone:val('f_phone'),address:val('f_addr'),role:val('f_role'),commitment:Number(val('f_commit'))||0,join_date:val('f_join'),active:document.getElementById('f_active').checked};
+  if(!data.name){alert('নাম আবশ্যক');return;}
+  try{
+    if(id){
+      const{error}=await sb.from('members').update(data).eq('id',id).eq('user_id',uidOwner());
+      if(error)throw error;
+      Object.assign(DB.members.find(x=>x.id===id),memberRowToObj(data));
+    }else{
+      const ins=await sb.from('members').insert({...data,user_id:uidOwner()}).select().single();
+      if(ins.error)throw ins.error;
+      DB.members.push(memberRowToObj(ins.data));
+    }
+    closeModal();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+async function deleteMember(id){
+  if(!confirm('আপনি কি নিশ্চিত এই সদস্যকে মুছে ফেলতে চান?'))return;
+  try{
+    const{error}=await sb.from('members').delete().eq('id',id).eq('user_id',uidOwner());
+    if(error)throw error;
+    DB.members=DB.members.filter(x=>x.id!==id);
+    DB.subs=DB.subs.filter(x=>x.memberId!==id); // members টেবিলে ON DELETE CASCADE-এর কারণে সার্ভারেও চাঁদা মুছে যাবে
+    renderApp();
+  }catch(e){alert('মুছতে ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+function val(id){return document.getElementById(id).value;}
+
+function subsView(){
+  const y=CUR_YEAR;
+  const rows=DB.subs.filter(s=>s.year===y).sort((a,b)=>b.month-a.month);
+  return `
+  <div class="card">
+    <div class="section-head"><h2 style="margin:0">চাঁদা আদায় — ${toBn(y)}</h2><button class="btn" onclick="openSubForm()">+ চাঁদা আদায়</button></div>
+    <table><thead><tr><th>সদস্য</th><th>মাস</th><th>পরিমাণ</th><th>তারিখ</th><th>মাধ্যম</th><th>রশিদ নং</th><th></th></tr></thead>
+    <tbody>${rows.map(s=>`<tr><td>${s.memberName}</td><td>${MONTHS[s.month-1]}</td><td>${taka(s.amount)}</td><td>${s.date}</td><td>${s.method}</td><td>${s.receipt}</td>
+      <td><button class="btn danger" style="padding:4px 8px" onclick="delSub('${s.id}')">মুছুন</button></td></tr>`).join('')||`<tr><td colspan="7" class="empty">এই বছরে কোনো চাঁদা আদায় হয়নি</td></tr>`}</tbody></table>
+  </div>`;
+}
+function openSubForm(){
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>চাঁদা আদায়</h3>
+  <div class="field"><label>সদস্য</label><select id="s_member" onchange="autoFillAmt()">${DB.members.filter(x=>x.active).map(m=>`<option value="${m.id}" data-amt="${m.commitment}">${m.name}</option>`).join('')}</select></div>
+  <div class="row">
+    <div class="field"><label>মাস</label><select id="s_month">${MONTHS.map((mn,i)=>`<option value="${i+1}" ${i+1===now.getMonth()+1?'selected':''}>${mn}</option>`).join('')}</select></div>
+    <div class="field"><label>বছর</label><input id="s_year" type="number" value="${CUR_YEAR}"></div>
+  </div>
+  <div class="field"><label>পরিমাণ (৳)</label><input id="s_amt" type="number" value="${DB.members[0]?DB.members[0].commitment:500}"></div>
+  <div class="field"><label>পরিশোধের তারিখ</label><input id="s_date" value="${todayBn()}"></div>
+  <div class="field"><label>মাধ্যম</label><select id="s_method">${PAY_METHODS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+  <div class="field"><label>রশিদ নং</label><input id="s_receipt" value="R-${toBn(1000+DB.subs.length+1)}"></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="saveSub()">সংরক্ষণ</button></div>`);
+}
+function autoFillAmt(){const sel=document.getElementById('s_member');document.getElementById('s_amt').value=sel.options[sel.selectedIndex].dataset.amt;}
+async function saveSub(){
+  const mid=val('s_member'),mm=DB.members.find(x=>x.id===mid);
+  const row={user_id:uidOwner(),member_id:mid,member_name:mm.name,month:Number(val('s_month')),year:Number(val('s_year')),amount:Number(val('s_amt'))||0,pay_date:val('s_date'),method:val('s_method'),receipt:val('s_receipt'),notes:''};
+  try{
+    const ins=await sb.from('subscriptions').insert(row).select().single();
+    if(ins.error)throw ins.error;
+    DB.subs.push(subRowToObj(ins.data));
+    closeModal();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+async function delSub(id){
+  if(!confirm('মুছে ফেলবেন?'))return;
+  try{
+    const{error}=await sb.from('subscriptions').delete().eq('id',id).eq('user_id',uidOwner());
+    if(error)throw error;
+    DB.subs=DB.subs.filter(x=>x.id!==id);renderApp();
+  }catch(e){alert('মুছতে ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+
+/* ---------- PRAYER SCHEDULE ---------- */
+function viewPrayer(){
+  return `<div class="card"><div class="section-head"><h2 style="margin:0">নামাজের সময়সূচী</h2></div>
+  <table><thead><tr><th>নামাজ</th><th>আজানের সময়</th><th>জামাতের সময়</th><th>রাকাত বিবরণ</th><th></th></tr></thead>
+  <tbody>${DB.prayers.map((p,i)=>`<tr><td>${p.name}${p.jummah?' <span class="tag">জুম্মা</span>':''}</td><td>${p.azan}</td><td>${p.jamaat}</td><td class="mini">${p.rakat}</td>
+    <td><button class="btn ghost" style="padding:4px 8px" onclick="openPrayerForm(${i})">সম্পাদনা</button></td></tr>`).join('')}</tbody></table></div>
+  <div class="card"><h2>মসজিদ পরিচিতি</h2>
+  <div class="grid g2 mini">
+    <div><b>মসজিদের নাম:</b> ${DB.info.mosqueName}</div>
+    <div><b>প্রতিষ্ঠাকাল:</b> ${DB.info.estYear}</div>
+    <div><b>ইমাম:</b> ${DB.info.imamName}</div>
+    <div><b>খতিব:</b> ${DB.info.khatibName}</div>
+    <div><b>সভাপতি:</b> ${DB.info.presidentName}</div>
+    <div><b>সাধারণ সম্পাদক:</b> ${DB.info.secretaryName}</div>
+    <div><b>কোষাধ্যক্ষ:</b> ${DB.info.treasurerName}</div>
+    <div><b>ফোন:</b> ${DB.info.phone}</div>
+  </div>
+  <div style="margin-top:10px"><button class="btn ghost" onclick="openInfoForm()">তথ্য সম্পাদনা</button></div></div>`;
+}
+function openPrayerForm(i){
+  const p=DB.prayers[i];
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>${p.name} — সময় সম্পাদনা</h3>
+  <div class="field"><label>আজানের সময়</label><input id="p_azan" value="${p.azan}"></div>
+  <div class="field"><label>জামাতের সময়</label><input id="p_jamaat" value="${p.jamaat}"></div>
+  <div class="field"><label>রাকাত বিবরণ</label><input id="p_rakat" value="${p.rakat}"></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="savePrayer(${i})">সংরক্ষণ</button></div>`);
+}
+async function savePrayer(i){
+  const p=DB.prayers[i],row={azan:val('p_azan'),jamaat:val('p_jamaat'),rakat:val('p_rakat')};
+  try{
+    const{error}=await sb.from('prayers').update(row).eq('key',p.key).eq('user_id',uidOwner());
+    if(error)throw error;
+    Object.assign(p,row);closeModal();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+function openInfoForm(){
+  const f=DB.info;
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>মসজিদের তথ্য</h3>
+  <div class="field"><label>মসজিদের নাম</label><input id="i_name" value="${f.mosqueName}"></div>
+  <div class="field"><label>ঠিকানা</label><input id="i_addr" value="${f.address}"></div>
+  <div class="field"><label>ইমাম</label><input id="i_imam" value="${f.imamName}"></div>
+  <div class="field"><label>খতিব</label><input id="i_khatib" value="${f.khatibName}"></div>
+  <div class="field"><label>সভাপতি</label><input id="i_president" value="${f.presidentName}"></div>
+  <div class="field"><label>সাধারণ সম্পাদক</label><input id="i_secretary" value="${f.secretaryName}"></div>
+  <div class="field"><label>কোষাধ্যক্ষ</label><input id="i_treasurer" value="${f.treasurerName}"></div>
+  <div class="field"><label>ফোন</label><input id="i_phone" value="${f.phone}"></div>
+  <div class="field"><label>বিজ্ঞপ্তি</label><textarea id="i_notice" rows="3">${f.noticeText}</textarea></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="saveInfo()">সংরক্ষণ</button></div>`);
+}
+async function saveInfo(){
+  const obj={mosqueName:val('i_name'),address:val('i_addr'),imamName:val('i_imam'),khatibName:val('i_khatib'),presidentName:val('i_president'),secretaryName:val('i_secretary'),treasurerName:val('i_treasurer'),phone:val('i_phone'),noticeText:val('i_notice')};
+  const row={};for(const k in INFO_COLS)row[INFO_COLS[k]]=obj[k];
+  try{
+    const{error}=await sb.from('mosque_info').update(row).eq('user_id',uidOwner());
+    if(error)throw error;
+    Object.assign(DB.info,obj);closeModal();renderHeader();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+
+/* ---------- DONATIONS & EXPENSES ---------- */
+let finSubTab='don';
+function viewFinance(){
+  return `<div class="tabs2">
+    <button class="${finSubTab==='don'?'active':''}" onclick="setFinTab('don')">দান/অনুদান</button>
+    <button class="${finSubTab==='exp'?'active':''}" onclick="setFinTab('exp')">ব্যয়</button>
+  </div>${finSubTab==='don'?donationsView():expensesView()}`;
+}
+function setFinTab(t){finSubTab=t;renderApp();}
+function donationsView(){
+  const rows=DB.donations.filter(d=>d.year===CUR_YEAR).sort((a,b)=>b.timestamp-a.timestamp);
+  const total=rows.reduce((a,b)=>a+b.amount,0);
+  return `<div class="card"><div class="section-head"><h2 style="margin:0">দান/অনুদান — ${toBn(CUR_YEAR)} (মোট ${taka(total)})</h2><button class="btn acc" onclick="openDonForm()">+ নতুন দান</button></div>
+  <table><thead><tr><th>দাতা</th><th>খাত</th><th>পরিমাণ</th><th>তারিখ</th><th>মাধ্যম</th><th>রশিদ</th><th></th></tr></thead>
+  <tbody>${rows.map(d=>`<tr><td>${d.donorName||'-'}</td><td>${d.category}</td><td>${taka(d.amount)}</td><td>${d.dateString}</td><td>${d.paymentMethod}</td><td>${d.receiptNo}</td>
+    <td><button class="btn danger" style="padding:4px 8px" onclick="delDon('${d.id}')">মুছুন</button></td></tr>`).join('')||`<tr><td colspan="7" class="empty">কোনো দান নথিভুক্ত নেই</td></tr>`}</tbody></table></div>`;
+}
+function openDonForm(){
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>নতুন দান যোগ</h3>
+  <div class="field"><label>দাতার নাম</label><input id="d_name" placeholder="নাম না জানা থাকলে ফাঁকা রাখুন"></div>
+  <div class="field"><label>দাতার ফোন</label><input id="d_phone"></div>
+  <div class="field"><label>খাত</label><select id="d_cat">${DON_CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+  <div class="field"><label>পরিমাণ (৳)</label><input id="d_amt" type="number" value="500"></div>
+  <div class="field"><label>মাধ্যম</label><select id="d_method">${PAY_METHODS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+  <div class="field"><label>তারিখ</label><input id="d_date" value="${todayBn()}"></div>
+  <div class="field"><label>রশিদ নং</label><input id="d_receipt" value="D-${toBn(1000+DB.donations.length+1)}"></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="saveDon()">সংরক্ষণ</button></div>`);
+}
+async function saveDon(){
+  const row={user_id:uidOwner(),donor_name:val('d_name'),donor_phone:val('d_phone'),category:val('d_cat'),amount:Number(val('d_amt'))||0,payment_method:val('d_method'),date_string:val('d_date'),year:CUR_YEAR,month_index:now.getMonth()+1,receipt_no:val('d_receipt'),notes:''};
+  try{
+    const ins=await sb.from('donations').insert(row).select().single();
+    if(ins.error)throw ins.error;
+    DB.donations.unshift(donRowToObj(ins.data));closeModal();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+async function delDon(id){
+  if(!confirm('মুছে ফেলবেন?'))return;
+  try{
+    const{error}=await sb.from('donations').delete().eq('id',id).eq('user_id',uidOwner());
+    if(error)throw error;
+    DB.donations=DB.donations.filter(x=>x.id!==id);renderApp();
+  }catch(e){alert('মুছতে ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+
+function expensesView(){
+  const rows=DB.expenses.filter(e=>e.year===CUR_YEAR).sort((a,b)=>b.timestamp-a.timestamp);
+  const total=rows.reduce((a,b)=>a+b.amount,0);
+  return `<div class="card"><div class="section-head"><h2 style="margin:0">ব্যয় — ${toBn(CUR_YEAR)} (মোট ${taka(total)})</h2><button class="btn danger" onclick="openExpForm()">+ নতুন ব্যয়</button></div>
+  <table><thead><tr><th>শিরোনাম</th><th>খাত</th><th>পরিমাণ</th><th>ভাউচার</th><th>অনুমোদনকারী</th><th>তারিখ</th><th></th></tr></thead>
+  <tbody>${rows.map(e=>`<tr><td>${e.title}</td><td>${e.category}</td><td>${taka(e.amount)}</td><td>${e.voucherNo}</td><td>${e.approvedBy}</td><td>${e.dateString}</td>
+    <td><button class="btn danger" style="padding:4px 8px" onclick="delExp('${e.id}')">মুছুন</button></td></tr>`).join('')||`<tr><td colspan="7" class="empty">কোনো ব্যয় নথিভুক্ত নেই</td></tr>`}</tbody></table></div>`;
+}
+function openExpForm(){
+  modal(`<button class="close" onclick="closeModal()">×</button><h3>নতুন ব্যয় যোগ</h3>
+  <div class="field"><label>শিরোনাম</label><input id="e_title"></div>
+  <div class="field"><label>খাত</label><select id="e_cat">${EXP_CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+  <div class="field"><label>পরিমাণ (৳)</label><input id="e_amt" type="number" value="500"></div>
+  <div class="field"><label>ভাউচার নং</label><input id="e_voucher" value="V-${toBn(1000+DB.expenses.length+1)}"></div>
+  <div class="field"><label>অনুমোদনকারী</label><input id="e_approved" value="${DB.info.presidentName}"></div>
+  <div class="field"><label>তারিখ</label><input id="e_date" value="${todayBn()}"></div>
+  <div class="actions"><button class="btn ghost" onclick="closeModal()">বাতিল</button><button class="btn" onclick="saveExp()">সংরক্ষণ</button></div>`);
+}
+async function saveExp(){
+  const row={user_id:uidOwner(),title:val('e_title'),category:val('e_cat'),amount:Number(val('e_amt'))||0,voucher_no:val('e_voucher'),approved_by:val('e_approved'),date_string:val('e_date'),year:CUR_YEAR,month_index:now.getMonth()+1,notes:''};
+  try{
+    const ins=await sb.from('expenses').insert(row).select().single();
+    if(ins.error)throw ins.error;
+    DB.expenses.unshift(expRowToObj(ins.data));closeModal();renderApp();
+  }catch(e){alert('সংরক্ষণ ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+async function delExp(id){
+  if(!confirm('মুছে ফেলবেন?'))return;
+  try{
+    const{error}=await sb.from('expenses').delete().eq('id',id).eq('user_id',uidOwner());
+    if(error)throw error;
+    DB.expenses=DB.expenses.filter(x=>x.id!==id);renderApp();
+  }catch(e){alert('মুছতে ব্যর্থ হয়েছে: '+(e.message||e));}
+}
+
+/* ---------- AUDIT REPORT ---------- */
+function viewAudit(){
+  const y=CUR_YEAR;
+  const yearSubs=DB.subs.filter(s=>s.year===y);
+  const yearDon=DB.donations.filter(d=>d.year===y);
+  const yearExp=DB.expenses.filter(e=>e.year===y);
+  const totalSub=yearSubs.reduce((a,b)=>a+b.amount,0);
+  const totalDon=yearDon.reduce((a,b)=>a+b.amount,0);
+  const totalIncome=totalSub+totalDon;
+  const totalExpense=yearExp.reduce((a,b)=>a+b.amount,0);
+  const net=totalIncome-totalExpense;
+  const monthRows=MONTHS.map((mn,i)=>{const sum=yearSubs.filter(s=>s.month===i+1).reduce((a,b)=>a+b.amount,0);return `<tr><td>${mn}</td><td>${taka(sum)}</td></tr>`;}).join('');
+  const donCatRows=DON_CATS.map(c=>{const sum=yearDon.filter(d=>d.category===c).reduce((a,b)=>a+b.amount,0);return `<tr><td>${c}</td><td>${taka(sum)}</td></tr>`;}).join('');
+  const expCatRows=EXP_CATS.map(c=>{const sum=yearExp.filter(e=>e.category===c).reduce((a,b)=>a+b.amount,0);return `<tr><td>${c}</td><td>${taka(sum)}</td></tr>`;}).join('');
+  return `
+  <div class="card no-print"><div class="row"><div class="field" style="max-width:160px"><label>বছর নির্বাচন</label><input type="number" value="${y}" onchange="changeYear(this.value)"></div>
+  <div class="field" style="max-width:200px"><label>মাস নির্বাচন (মাসিক প্রিন্টের জন্য)</label><select id="auditMonthSel">${MONTHS.map((mn,i)=>`<option value="${i+1}" ${i+1===now.getMonth()+1?'selected':''}>${mn}</option>`).join('')}</select></div>
+  <button class="btn" onclick="printAuditReport()">🖨️ বার্ষিক প্রিন্ট (A4, ১ পেজ)</button>
+  <button class="btn acc" onclick="printMonthlyStatements()">🖨️ মাসিক হিসাব প্রিন্ট (A5, ১ পেজ)</button></div></div>
+  <div id="auditPrintArea">
+  <div class="card">
+    <h2>বার্ষিক অডিট রিপোর্ট — ${toBn(y)}</h2>
+    <p class="mini">${DB.info.mosqueName} | ${DB.info.address}</p>
+    <div class="grid g4">
+      <div class="stat"><b>${taka(totalSub)}</b><span>মাসিক চাঁদা আয়</span></div>
+      <div class="stat"><b>${taka(totalDon)}</b><span>অনুদান আয়</span></div>
+      <div class="stat"><b>${taka(totalExpense)}</b><span>মোট ব্যয়</span></div>
+      <div class="stat"><b style="color:${net>=0?'var(--pri-d)':'var(--danger)'}">${taka(net)}</b><span>নিট উদ্বৃত্ত</span></div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>মাসভিত্তিক চাঁদা আদায়</h2><table><thead><tr><th>মাস</th><th>পরিমাণ</th></tr></thead><tbody>${monthRows}</tbody></table></div>
+    <div class="card"><h2>খাতভিত্তিক অনুদান</h2><table><thead><tr><th>খাত</th><th>পরিমাণ</th></tr></thead><tbody>${donCatRows}</tbody></table></div>
+  </div>
+  <div class="card"><h2>খাতভিত্তিক ব্যয়</h2><table><thead><tr><th>খাত</th><th>পরিমাণ</th></tr></thead><tbody>${expCatRows}
+    <tr style="font-weight:700"><td>মোট ব্যয়</td><td>${taka(totalExpense)}</td></tr></tbody></table></div>
+  <div class="card">
+    <h2>সারসংক্ষেপ</h2>
+    <table><tbody>
+      <tr><td>মোট আয় (চাঁদা + অনুদান)</td><td style="font-weight:700">${taka(totalIncome)}</td></tr>
+      <tr><td>মোট ব্যয়</td><td style="color:var(--danger)">(-) ${taka(totalExpense)}</td></tr>
+      <tr style="font-weight:700"><td>নিট উদ্বৃত্ত</td><td>${taka(net)}</td></tr>
+    </tbody></table>
+    <div class="grid g4" style="margin-top:24px">
+      <div class="mini" style="text-align:center;border-top:1px solid var(--border);padding-top:6px">${DB.info.presidentName}<br>সভাপতি</div>
+      <div class="mini" style="text-align:center;border-top:1px solid var(--border);padding-top:6px">${DB.info.secretaryName}<br>সাধারণ সম্পাদক</div>
+      <div class="mini" style="text-align:center;border-top:1px solid var(--border);padding-top:6px">${DB.info.treasurerName}<br>কোষাধ্যক্ষ</div>
+      <div class="mini" style="text-align:center;border-top:1px solid var(--border);padding-top:6px">নিরীক্ষক</div>
+    </div>
+  </div>
+  </div>`;
+}
+function changeYear(v){CUR_YEAR=Number(v)||CUR_YEAR;renderApp();}
+function printViaIframe(title,bodyHtml,extraStyles,opts){
+  opts=opts||{};
+  const styles=`<style>
+    *{box-sizing:border-box}
+    body{font-family:"Noto Sans Bengali","SolaimanLipi",sans-serif;color:#1f2d27;margin:16px}
+    h2{color:#094d38;font-size:1.05rem;margin:0 0 6px}
+    h3{color:#094d38;font-size:.95rem;margin:8px 0 4px}
+    .card{border:1px solid #e0e6e2;border-radius:10px;padding:14px;margin-bottom:14px}
+    .grid{display:grid;gap:10px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+    .stat{border:1px solid #e0e6e2;border-radius:10px;padding:10px;text-align:center}
+    .stat b{display:block;font-size:1.2rem;color:#094d38}.stat span{color:#5f6f68;font-size:.8rem}
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th,td{padding:5px 7px;border-bottom:1px solid #e0e6e2;text-align:right}
+    thead th{background:#eef4f1;color:#094d38}.mini{font-size:.78rem;color:#5f6f68}
+    @media (max-width:480px){.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+    ${extraStyles||''}
+  </style>`;
+  const fullHtml='<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><title>'+title+'</title>'+styles+'</head><body>'+bodyHtml+'</body></html>';
+  if(window.AndroidPrint){AndroidPrint.printHtml(fullHtml,title,!!opts.landscape,!!opts.a5);return;}
+  const old=document.getElementById('printFrame');
+  if(old)old.remove();
+  const iframe=document.createElement('iframe');
+  iframe.id='printFrame';
+  iframe.style.position='fixed';
+  iframe.style.right='0';iframe.style.bottom='0';
+  iframe.style.width='0';iframe.style.height='0';
+  iframe.style.border='0';
+  document.body.appendChild(iframe);
+  const doc=iframe.contentWindow.document;
+  doc.open();
+  doc.write(fullHtml);
+  doc.close();
+  function doPrint(){
+    try{iframe.contentWindow.focus();iframe.contentWindow.print();}
+    catch(e){alert('এই ব্রাউজারে সরাসরি প্রিন্ট করা যায়নি। অনুগ্রহ করে ব্রাউজারের মেনু থেকে "শেয়ার/প্রিন্ট" অপশন ব্যবহার করুন।');}
+  }
+  if(iframe.contentWindow.document.readyState==='complete'){setTimeout(doPrint,150);}
+  else{iframe.onload=function(){setTimeout(doPrint,150);};}
+}
+function fitFs(n,big,small){return Math.max(small,big-n*0.012).toFixed(2)+'rem';}
+function memberYearSubs(mid,y){return DB.subs.filter(s=>s.memberId===mid&&s.year===y);}
+function printAuditReport(){
+  const y=CUR_YEAR;
+  const ms=DB.members.filter(m=>m.active);
+  const short=MONTHS.map(m=>m.slice(0,3));
+  const sumOf=(a)=>a.reduce((x,z)=>x+z.amount,0);
+  const rows=ms.map((m,i)=>{
+    const subs=memberYearSubs(m.id,y);
+    const cells=MONTHS.map((_,k)=>{const a=sumOf(subs.filter(s=>s.month===k+1));return `<td class="${a?'':'no'}">${a?toBn(a):'—'}</td>`;}).join('');
+    return `<tr><td class="l">${toBn(i+1)}. ${m.name}</td>${cells}<td><b>${toBn(sumOf(subs))}</b></td></tr>`;
+  }).join('');
+  const yS=DB.subs.filter(s=>s.year===y),yD=DB.donations.filter(d=>d.year===y),yE=DB.expenses.filter(e=>e.year===y);
+  const tS=sumOf(yS),tD=sumOf(yD),tE=sumOf(yE),net=tS+tD-tE;
+  const cat=(list,cats)=>cats.map(c=>`<tr><td class="l">${c}</td><td>${taka(sumOf(list.filter(x=>x.category===c)))}</td></tr>`).join('');
+  const fs=fitFs(ms.length,.78,.5);
+  const body=`<div class="pg">
+    <div class="hd"><div><b>${DB.info.mosqueName}</b><br><span class="mini">${DB.info.address}</span></div><div style="text-align:left"><b><span class="lg">🕌</span> বার্ষিক আর্থিক হিসাব — ${toBn(y)}</b><br><span class="mini">সদস্যভিত্তিক মাসিক চাঁদা (৳)</span></div></div>
+    <table class="mx"><thead><tr><th class="l">সদস্য</th>${short.map(s=>`<th>${s}</th>`).join('')}<th>মোট</th></tr></thead><tbody>${rows}
+    <tr class="tot"><td class="l">মোট চাঁদা</td>${MONTHS.map((_,k)=>`<td>${toBn(sumOf(yS.filter(s=>s.month===k+1)))}</td>`).join('')}<td>${toBn(tS)}</td></tr></tbody></table>
+    <div class="cols3">
+      <div><h3>অনুদান খাত</h3><table>${cat(yD,DON_CATS)}<tr class="tot"><td class="l">মোট</td><td>${taka(tD)}</td></tr></table></div>
+      <div><h3>ব্যয় খাত</h3><table>${cat(yE,EXP_CATS)}<tr class="tot"><td class="l">মোট</td><td>${taka(tE)}</td></tr></table></div>
+      <div><h3>সারসংক্ষেপ</h3><table>
+        <tr><td class="l">চাঁদা আয়</td><td>${taka(tS)}</td></tr><tr><td class="l">অনুদান আয়</td><td>${taka(tD)}</td></tr>
+        <tr><td class="l">মোট ব্যয়</td><td>${taka(tE)}</td></tr><tr class="tot"><td class="l">নিট উদ্বৃত্ত</td><td>${taka(net)}</td></tr></table></div>
+    </div>
+    <div class="sig"><span>${DB.info.presidentName}<br>সভাপতি</span><span>${DB.info.secretaryName}<br>সাধারণ সম্পাদক</span><span>${DB.info.treasurerName}<br>কোষাধ্যক্ষ</span></div>
+  </div>`;
+  const ftr='<div class="ftr"><span>মুদ্রণের তারিখ: '+todayBn()+'</span><span>কম্পিউটার জেনারেটেড রিপোর্ট — স্বাক্ষর ব্যতীত অগ্রহণযোগ্য</span></div>';
+  printViaIframe('বার্ষিক আর্থিক হিসাব '+toBn(y),body.replace('</div>',ftr+'</div>'),`
+    @page{size:297mm 210mm;margin:4mm}
+    html,body{margin:0;padding:0;overflow:hidden}
+    .pg{width:289mm;height:200mm;overflow:hidden;font-size:${fs};display:flex;flex-direction:column}
+    .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #c99a2e;padding-bottom:5px;margin-bottom:6px}
+    .hd .lg{font-size:1.3em;margin-left:6px}
+    table{font-size:${fs}}th,td{padding:1.5px 3px;text-align:center;border:1px solid #cfd8d3}
+    thead th{background:#094d38;color:#fff}
+    .l{text-align:right!important}.no{color:#b3412e}.tot td{font-weight:700;background:#eef4f1}
+    .mx{margin-bottom:8px}.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .sig{display:flex;justify-content:space-around;margin-top:auto;padding-top:10px;text-align:center;font-size:.75rem}
+    .sig span{border-top:1px solid #777;padding:3px 24px}
+    .ftr{margin-top:6px;padding-top:4px;border-top:1px dashed #cfd8d3;display:flex;justify-content:space-between;font-size:.62rem;color:#5f6f68}`,{landscape:true});
+}
+function printMonthlyStatements(){
+  const y=CUR_YEAR,mi=Number(document.getElementById('auditMonthSel').value),mn=MONTHS[mi-1];
+  const ms=DB.members.filter(m=>m.active);
+  const dons=DB.donations.filter(d=>d.year===y&&d.monthIndex===mi);
+  const exps=DB.expenses.filter(e=>e.year===y&&e.monthIndex===mi);
+  const subs=DB.subs.filter(s=>s.year===y&&s.month===mi);
+  const sumOf=a=>a.reduce((x,z)=>x+z.amount,0);
+  const tS=sumOf(subs),tD=sumOf(dons),tE=sumOf(exps);
+  const mRows=ms.map((m,i)=>{const p=subs.filter(s=>s.memberId===m.id);const a=sumOf(p);
+    return `<tr><td class="l">${toBn(i+1)}. ${m.name}</td><td>${taka(m.commitment)}</td><td>${a?taka(a):'বকেয়া'}</td><td>${p[0]?p[0].method:'—'}</td><td>${p[0]?p[0].receipt:'—'}</td></tr>`;}).join('');
+  const dRows=dons.map(d=>`<tr><td class="l">${d.donorName||'নাম নেই'}</td><td>${d.category}</td><td>${taka(d.amount)}</td></tr>`).join('')||`<tr><td colspan="3">কোনো অনুদান নেই</td></tr>`;
+  const eRows=exps.map(e=>`<tr><td class="l">${e.title}</td><td>${e.category}</td><td>${taka(e.amount)}</td></tr>`).join('')||`<tr><td colspan="3">কোনো ব্যয় নেই</td></tr>`;
+  const n=ms.length+dons.length+exps.length;
+  const fs=fitFs(n,.72,.45);
+  const body=`<div class="pg">
+    <div class="hd"><div><b>${DB.info.mosqueName}</b><br><span class="mini">${DB.info.address}</span></div><div style="text-align:left"><b><span class="lg">🕌</span> মাসিক হিসাব</b><br><span class="mini">${mn}, ${toBn(y)}</span></div></div>
+    <h3>সদস্যভিত্তিক চাঁদা (আদায় ${taka(tS)})</h3>
+    <table><thead><tr><th class="l">সদস্য</th><th>নির্ধারিত</th><th>আদায়</th><th>মাধ্যম</th><th>রশিদ</th></tr></thead><tbody>${mRows}</tbody></table>
+    <h3>অনুদান (মোট ${taka(tD)})</h3><table><tbody>${dRows}</tbody></table>
+    <h3>ব্যয় (মোট ${taka(tE)})</h3><table><tbody>${eRows}</tbody></table>
+    <div class="net">নিট (চাঁদা + অনুদান − ব্যয়): <b>${taka(tS+tD-tE)}</b></div>
+  </div>`;
+  const ftrM='<div class="ftr">মুদ্রণের তারিখ: '+todayBn()+' — কম্পিউটার জেনারেটেড</div>';
+  printViaIframe('মাসিক হিসাব — '+mn+' '+toBn(y),body.replace('</div>',ftrM+'</div>'),`
+    @page{size:148mm 210mm;margin:4mm}
+    html,body{margin:0;padding:0;overflow:hidden}
+    .pg{width:140mm;height:200mm;overflow:hidden;font-size:${fs};display:flex;flex-direction:column}
+    .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #c99a2e;padding-bottom:4px;margin-bottom:4px}
+    .hd .lg{font-size:1.3em;margin-left:5px}
+    h3{margin:5px 0 2px;font-size:${fs};color:#094d38}table{font-size:${fs}}th,td{padding:1.5px 3px;text-align:center;border:1px solid #cfd8d3}
+    thead th{background:#eef4f1;color:#094d38}
+    .l{text-align:right!important}.net{margin-top:5px;text-align:left}
+    .ftr{margin-top:auto;padding-top:4px;border-top:1px dashed #cfd8d3;font-size:.6rem;color:#5f6f68;text-align:center}`,{a5:true});
+}
+function printMemberStatement(id){
+  const m=DB.members.find(x=>x.id===id);if(!m)return;
+  const y=CUR_YEAR,subs=memberYearSubs(id,y);
+  const limit=(y===now.getFullYear())?now.getMonth()+1:12;
+  let paid=0,dueCnt=0;
+  const rows=MONTHS.map((mn,k)=>{const p=subs.filter(s=>s.month===k+1);const a=p.reduce((x,z)=>x+z.amount,0);paid+=a;
+    const due=!a&&k+1<=limit;if(due)dueCnt++;
+    return `<tr><td class="l">${mn}</td><td>${a?taka(a):(due?'বকেয়া':'—')}</td><td>${p[0]?p[0].date:'—'}</td><td>${p[0]?p[0].method:'—'}</td><td>${p[0]?p[0].receipt:'—'}</td></tr>`;}).join('');
+  const body=`<div class="pg">
+    <div class="hd"><div><b>${DB.info.mosqueName}</b><br><span class="mini">${DB.info.address}</span></div><div style="text-align:left"><b><span class="lg">🕌</span> সদস্য চাঁদার হিসাব</b><br><span class="mini">${toBn(y)} সাল</span></div></div>
+    <table class="info"><tr><td class="l">নাম: <b>${m.name}</b></td><td class="l">কোড: ${m.code}</td></tr>
+    <tr><td class="l">পদবি: ${m.role}</td><td class="l">ফোন: ${m.phone}</td></tr>
+    <tr><td class="l">ঠিকানা: ${m.address}</td><td class="l">যোগদান: ${m.joinDate}</td></tr>
+    <tr><td class="l">মাসিক চাঁদা: ${taka(m.commitment)}</td><td class="l">মোট আদায়: <b>${taka(paid)}</b></td></tr></table>
+    <table><thead><tr><th class="l">মাস</th><th>পরিমাণ</th><th>তারিখ</th><th>মাধ্যম</th><th>রশিদ</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="net">বকেয়া মাস: <b>${toBn(dueCnt)}</b> টি — বকেয়া টাকা: <b>${taka(dueCnt*m.commitment)}</b></div>
+  </div>`;
+  const ftrS='<div class="ftr">মুদ্রণের তারিখ: '+todayBn()+' — কম্পিউটার জেনারেটেড</div>';
+  printViaIframe('সদস্য হিসাব — '+m.name,body.replace('</div>',ftrS+'</div>'),`
+    @page{size:148mm 210mm;margin:4mm}
+    html,body{margin:0;padding:0;overflow:hidden}
+    .pg{width:140mm;height:200mm;overflow:hidden;font-size:.8rem;display:flex;flex-direction:column}
+    .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #c99a2e;padding-bottom:4px;margin-bottom:6px}
+    .hd .lg{font-size:1.3em;margin-left:5px}
+    table{margin-bottom:8px}th,td{padding:3px 4px;text-align:center;border:1px solid #cfd8d3}
+    thead th{background:#eef4f1;color:#094d38}
+    .l{text-align:right!important}.net{text-align:left}
+    .ftr{margin-top:auto;padding-top:4px;border-top:1px dashed #cfd8d3;font-size:.6rem;color:#5f6f68;text-align:center}`,{a5:true});
+}
+
+/* ---------- Render ---------- */
+function renderApp(){
+  const el=document.getElementById('app');
+  if(currentTab==='dashboard')el.innerHTML=viewDashboard();
+  else if(currentTab==='members')el.innerHTML=viewMembers();
+  else if(currentTab==='prayer')el.innerHTML=viewPrayer();
+  else if(currentTab==='finance')el.innerHTML=viewFinance();
+  else if(currentTab==='audit')el.innerHTML=viewAudit();
+}
+boot();
+</script>
+</body>
+</html>
